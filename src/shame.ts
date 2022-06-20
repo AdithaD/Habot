@@ -1,6 +1,7 @@
 import dayjs from "dayjs";
 import { Client, TextChannel } from "discord.js";
 import { Habit } from "./db/habit";
+import { hasValidLatestCheckin } from "./utils";
 
 let timeouts = new Map<string, NodeJS.Timeout>();
 
@@ -45,9 +46,9 @@ export function scheduleShame(habit: Habit, client: Client<boolean>) {
 }
 
 export async function nameAndShame(habit: Habit, client: Client<boolean>) {
-  console.log(`${habit}`);
-  const shouldShame = true;
-  if (shouldShame) {
+  const checkIn = await hasValidLatestCheckin(habit);
+  console.log(checkIn);
+  if (checkIn == null) {
     const guild = await client.guilds.fetch(habit.guild);
     const target = await guild.members.fetch(habit.target);
     if (guild) {
@@ -66,7 +67,9 @@ export async function nameAndShame(habit: Habit, client: Client<boolean>) {
         });
       }
     }
-
-    scheduleShame(habit, client);
+  } else {
+    console.log(`${habit.name} no shame`);
   }
+
+  scheduleShame(habit, client);
 }

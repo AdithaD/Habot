@@ -61,10 +61,8 @@ client.on("interactionCreate", async (interaction) => {
   try {
     if (interaction.isAutocomplete()) {
       const command = client.commands.get(interaction.commandName);
-      console.log("isAuto");
       try {
         if (command.autocomplete) {
-          console.log("autocomplete");
           await command.autocomplete(interaction);
         } else {
           console.log(
@@ -72,11 +70,9 @@ client.on("interactionCreate", async (interaction) => {
           );
         }
       } catch (error) {
-        console.log("inner auto erro");
         console.log(error);
       }
     } else if (interaction.isApplicationCommand()) {
-      console.log("isapp");
       const command = client.commands.get(interaction.commandName);
 
       try {

@@ -5,6 +5,7 @@ import {
   GuildMember,
 } from "discord.js";
 import { habitModel } from "../db/habit";
+import { removeTimeout } from "../shame";
 
 export default {
   data: new SlashCommandBuilder()
@@ -30,6 +31,7 @@ export default {
       return;
     } else {
       if (habit.target == (interaction.member as GuildMember).id) {
+        removeTimeout(habit._id.toString());
         await interaction.reply({ content: `${habit.name} removed` });
       }
     }
