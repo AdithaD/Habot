@@ -11,6 +11,13 @@ export function removeTimeout(habitId: string) {
   }
 }
 
+export function clearAll() {
+  timeouts.forEach((timeout) => {
+    clearTimeout(timeout);
+  });
+  timeouts.clear();
+}
+
 export function scheduleShame(habit: Habit, client: Client<boolean>) {
   let timeout: NodeJS.Timeout | null = null;
   if (dayjs().isAfter(habit.datetime)) {

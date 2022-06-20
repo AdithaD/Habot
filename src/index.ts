@@ -21,7 +21,8 @@ config();
 
 import "./db/db";
 import { Habit, habitModel } from "./db/habit";
-import { scheduleShame } from "./shame";
+import readline from "readline";
+import { clearAll, scheduleShame } from "./shame";
 
 const client = new Client({ intents: [Intents.FLAGS.GUILDS] }) as Client & {
   commands: Collection<string, any>;
@@ -46,8 +47,6 @@ initFromDB();
 
 const token = process.env.DISCORD_TOKEN;
 
-let habits: Habit[] = [];
-
 if (token) {
   client.login();
 } else {
@@ -62,14 +61,22 @@ client.on("interactionCreate", async (interaction) => {
   try {
     if (interaction.isAutocomplete()) {
       const command = client.commands.get(interaction.commandName);
-      if (command.autocomplete) {
-        await command.autocomplete(interaction);
-      } else {
-        console.log(
-          `Command ${interaction.commandName} does not have autocomplete handler.`
-        );
+      console.log("isAuto");
+      try {
+        if (command.autocomplete) {
+          console.log("autocomplete");
+          await command.autocomplete(interaction);
+        } else {
+          console.log(
+            `Command ${interaction.commandName} does not have autocomplete handler.`
+          );
+        }
+      } catch (error) {
+        console.log("inner auto erro");
+        console.log(error);
       }
     } else if (interaction.isApplicationCommand()) {
+      console.log("isapp");
       const command = client.commands.get(interaction.commandName);
 
       try {
@@ -83,6 +90,7 @@ client.on("interactionCreate", async (interaction) => {
       }
     }
   } catch (error) {
+    console.log("outer error");
     console.error(error);
   }
 });
@@ -94,8 +102,18 @@ export function initFromDB() {
       throw new Error("Error while initializing from DB");
     } else {
       h.forEach((h) => scheduleShame(h, client));
-
-      habits = h;
     }
   });
 }
+
+readline
+  .createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  })
+  .on("line", (line) => {
+    if (line === "exit") {
+      clearAll();
+      process.exit();
+    }
+  });

@@ -37,13 +37,13 @@ export default {
   async autocomplete(interaction: AutocompleteInteraction) {
     const query = interaction.options.getString("habit");
     const pipeline = [];
-    /* if (query.length > 0) {
+    if (query.length > 0) {
       pipeline.push({
         $search: {
           autocomplete: { query, path: "name" },
         },
       });
-    } */
+    }
 
     console.log(
       `${interaction.guild.id} ${(interaction.member as GuildMember).id}`
@@ -58,7 +58,6 @@ export default {
 
     const habits = await habitModel.aggregate(pipeline);
 
-    console.log(habits);
     const results = habits.map((habit) => ({
       name: habit.name,
       value: habit.name,
