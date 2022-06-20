@@ -67,7 +67,7 @@ export default {
       datetime: datetime.toDate(),
       window,
       repeat,
-      audience: audience.id,
+      audience: audience?.id,
       guild: interaction.guild.id,
       target: (interaction.member as GuildMember).id,
     });
