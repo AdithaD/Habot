@@ -86,7 +86,6 @@ client.on("interactionCreate", async (interaction) => {
       }
     }
   } catch (error) {
-    console.log("outer error");
     console.error(error);
   }
 });

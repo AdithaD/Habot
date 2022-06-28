@@ -1,4 +1,4 @@
-import dayjs, { Dayjs } from "dayjs";
+import dayjs from "dayjs";
 import { CheckIn, checkInModel } from "./db/checkin";
 import { Habit } from "./db/habit";
 
@@ -7,6 +7,7 @@ export function getEndTime(habit: Habit, offset?: number): dayjs.Dayjs {
     offset && habit.repeat
       ? dayjs().subtract(habit.repeat * offset, "second")
       : dayjs();
+
   if (compareDate.isAfter(habit.datetime) && habit.repeat && habit.repeat > 0) {
     const quotient = Math.floor(
       compareDate.diff(dayjs(habit.datetime), "seconds") / habit.repeat
@@ -35,16 +36,16 @@ export function inWindow(
   return result;
 }
 
-export async function hasValidLatestCheckin(
-  habit: Habit
+export async function hasValidLatestCheckIn(
+  habit: Habit,
+  offset?: number
 ): Promise<CheckIn | null> {
-  console.log("Has Valid Latest Check In");
   const lastCheckIn = await checkInModel
     .findOne({ habit: habit._id })
     .sort({ timeOfCheckIn: -1 })
     .limit(1);
 
-  const nextEndTime = getEndTime(habit, 1);
+  const nextEndTime = getEndTime(habit, offset);
   if (!lastCheckIn) {
     return null;
   } else {

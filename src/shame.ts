@@ -7,9 +7,9 @@ import {
   Role,
   TextChannel,
 } from "discord.js";
-import { set } from "mongoose";
+import mongoose, { set } from "mongoose";
 import { Habit, habitModel } from "./db/habit";
-import { hasValidLatestCheckin } from "./utils";
+import { hasValidLatestCheckIn } from "./utils";
 
 let timeouts = new Map<string, NodeJS.Timeout>();
 
@@ -40,21 +40,27 @@ export function scheduleShame(habit: Habit, client: Client<boolean>) {
         `Scheduling ${habit.name} in ${offset}ms due to a diff of ${diff}`
       );
 
-      timeout = setTimeout(() => nameAndShame(habit, client), offset);
+      timeout = setTimeout(() => nameAndShame(habit._id, client), offset);
     }
   } else {
     const offset = dayjs(habit.datetime).diff(dayjs());
 
     console.log(`Scheduling ${habit.name} in ${offset}ms`);
     if (!timeouts.has(habit._id.toString()))
-      timeout = setTimeout(() => nameAndShame(habit, client), offset);
+      timeout = setTimeout(() => nameAndShame(habit._id, client), offset);
   }
 
   if (timeout) timeouts.set(habit._id.toString(), timeout);
 }
 
-export async function nameAndShame(habit: Habit, client: Client<boolean>) {
-  const hasCheckIn = (await hasValidLatestCheckin(habit)) != null;
+export async function nameAndShame(
+  habitId: mongoose.Types.ObjectId,
+  client: Client<boolean>
+) {
+  const habit = await habitModel.findById(habitId);
+
+  console.log(`Checking Name and Shame command: ${dayjs().format("HH:mm:ss")}`);
+  const hasCheckIn = (await hasValidLatestCheckIn(habit, 1)) != null;
   console.log(`Should shame?? ${hasCheckIn == false}`);
 
   const guild = await client.guilds.fetch(habit.guild);
@@ -68,56 +74,23 @@ export async function nameAndShame(habit: Habit, client: Client<boolean>) {
       const member = guild.members.cache.get(habit.audience);
       const role = guild.roles.cache.get(habit.audience);
 
-      habit = await habitModel.findByIdAndUpdate(
-        habit._id,
-        hasCheckIn
-          ? habit.streak > 1
-            ? { $inc: { streak: 1 } }
-            : { $set: { streak: 1 } }
-          : habit.streak < -1
-          ? { $inc: { streak: -1 } }
-          : { $set: { streak: -1 } },
-        { new: true }
-      );
+      if (!hasCheckIn) {
+        let previousStreak = habit.streak;
+        console.log(previousStreak);
+        // Set update streak
+        habit.streak = habit.streak < 0 ? habit.streak - 1 : -1;
+        await habit.save();
 
-      let message = getMessage(habit, target, member, role);
-
-      if (message) channel.send(message);
+        channel.send({
+          content: `${member ? `<@${member.id}>,` : ""} ${
+            role ? `<@${role.id}>` : ""
+          } ${`<@${target.id}>`} has been shamed for not ${habit.name}. ${
+            previousStreak > 2 ? `Losing a streak of ${previousStreak}` : ""
+          }`,
+        });
+      }
     }
   }
 
   scheduleShame(habit, client);
 }
-
-function getMessage(
-  habit: Habit,
-  target: GuildMember,
-  member: GuildMember,
-  role: Role
-): MessageOptions | null {
-  console.log(`habit.streak: ${habit.streak}`);
-  if (habit.streak > 0) {
-    if (streakGoals.includes(habit.streak)) {
-      let next = streakGoals.findIndex((n) => n == habit.streak) + 1;
-      return {
-        content: `${member ? `<@${member.id}>,` : ""} ${
-          role ? `<@${role.id}>` : ""
-        } ${`<@${target.id}>`} has completed ${habit.name} ${
-          habit.streak
-        } amount of times in a row! ${
-          streakGoals.length > next
-            ? ` Your next goal is ${streakGoals[next]}`
-            : ""
-        }`,
-      };
-    }
-  } else {
-    return {
-      content: `${member ? `<@${member.id}>,` : ""} ${
-        role ? `<@${role.id}>` : ""
-      } ${`<@${target.id}>`} has been shamed for not ${habit.name}`,
-    };
-  }
-}
-
-const streakGoals = [3, 5, 10, 20, 35, 50, 75, 100];

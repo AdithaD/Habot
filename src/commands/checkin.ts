@@ -2,12 +2,14 @@ import { SlashCommandBuilder } from "@discordjs/builders";
 import dayjs from "dayjs";
 import {
   AutocompleteInteraction,
+  Client,
   CommandInteraction,
   GuildMember,
+  MessageOptions,
 } from "discord.js";
 import { checkInModel } from "../db/checkin";
 import { Habit, habitModel } from "../db/habit";
-import { getEndTime, hasValidLatestCheckin, inWindow } from "../utils";
+import { getEndTime, hasValidLatestCheckIn, inWindow } from "../utils";
 
 export default {
   data: new SlashCommandBuilder()
@@ -21,6 +23,7 @@ export default {
         .setAutocomplete(true)
     ),
   async execute(interaction: CommandInteraction) {
+    console.log(`Running command: CHECK IN ${dayjs().format("HH:mm:ss")}`);
     const habitName = interaction.options.getString("habit");
 
     const habit = await habitModel.findOne({
@@ -44,7 +47,18 @@ export default {
           try {
             await checkIn.validate();
             await checkIn.save();
-            await interaction.reply({ content: `${habit.name} checked in` });
+
+            // Updates streak
+            habit.streak = habit.streak < 1 ? 1 : habit.streak + 1;
+            await habit.save();
+
+            let message = await getMessage(habit, interaction.client);
+
+            await interaction.reply(
+              message ??
+                `Successfully checked in ${habit.streak} times in a row`
+            );
+            console.log("\n Successfully Checked In");
           } catch (error) {
             console.log(error);
             await interaction.reply({ content: "Error while saving to DB" });
@@ -93,9 +107,9 @@ async function canCheckIn(
 ): Promise<{ canCheckIn: boolean; error?: string }> {
   const nextEndTime = getEndTime(habit);
 
-  const _hasValidLatestCheckin = await hasValidLatestCheckin(habit);
+  const _hasValidLatestCheckin = await hasValidLatestCheckIn(habit);
+
   if (habit.window) {
-    console.log("Can Check In");
     let isNowInWindow = inWindow(dayjs(), habit.window, "seconds", nextEndTime);
     let canCheckIn = !_hasValidLatestCheckin && isNowInWindow;
 
@@ -136,3 +150,26 @@ async function canCheckIn(
     }
   }
 }
+
+async function getMessage(
+  habit: Habit,
+  client: Client<boolean>
+): Promise<string | null> {
+  const guild = await client.guilds.fetch(habit.guild);
+  const target = await guild.members.fetch(habit.target);
+  const member = guild.members.cache.get(habit.audience);
+  const role = guild.roles.cache.get(habit.audience);
+  console.log(`habit.streak: ${habit.streak}`);
+  if (streakGoals.includes(habit.streak)) {
+    let next = streakGoals.findIndex((n) => n == habit.streak) + 1;
+    return `${member ? `<@${member.id}>,` : ""} ${
+      role ? `<@${role.id}>` : ""
+    } ${`<@${target.id}>`} has completed ${habit.name} ${
+      habit.streak
+    } amount of times in a row! ${
+      streakGoals.length > next ? ` Your next goal is ${streakGoals[next]}` : ""
+    }`;
+  }
+}
+
+const streakGoals = [3, 5, 10, 20, 35, 50, 75, 100];
