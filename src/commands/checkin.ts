@@ -44,7 +44,6 @@ export default {
           try {
             await checkIn.validate();
             await checkIn.save();
-            console.log(checkIn.toJSON());
             await interaction.reply({ content: `${habit.name} checked in` });
           } catch (error) {
             console.log(error);
@@ -72,10 +71,6 @@ export default {
       });
     }
 
-    console.log(
-      `${interaction.guild.id} ${(interaction.member as GuildMember).id}`
-    );
-
     pipeline.push({
       $match: {
         guild: interaction.guild.id,
@@ -100,6 +95,7 @@ async function canCheckIn(
 
   const _hasValidLatestCheckin = await hasValidLatestCheckin(habit);
   if (habit.window) {
+    console.log("Can Check In");
     let isNowInWindow = inWindow(dayjs(), habit.window, "seconds", nextEndTime);
     let canCheckIn = !_hasValidLatestCheckin && isNowInWindow;
 
@@ -121,7 +117,6 @@ async function canCheckIn(
     }
   } else {
     let beforeDateTime = dayjs().isBefore(dayjs(nextEndTime));
-    console.log(beforeDateTime);
     let canCheckIn = !_hasValidLatestCheckin && beforeDateTime;
     if (!canCheckIn) {
       let error = " ";

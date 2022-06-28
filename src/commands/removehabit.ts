@@ -46,11 +46,6 @@ export default {
         },
       });
     }
-
-    console.log(
-      `${interaction.guild.id} ${(interaction.member as GuildMember).id}`
-    );
-
     pipeline.push({
       $match: {
         guild: interaction.guild.id,
@@ -64,7 +59,6 @@ export default {
       name: habit.name,
       value: habit.name,
     }));
-    console.log(results);
     await interaction.respond(results);
   },
 };

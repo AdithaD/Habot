@@ -24,20 +24,27 @@ export function inWindow(
   unit: dayjs.ManipulateType,
   endTime: dayjs.Dayjs
 ): boolean {
-  console.log(`${date.toISOString()} ${endTime.toISOString()}`);
-  return date.isAfter(endTime.subtract(window, unit)) && date.isBefore(endTime);
+  const result =
+    date.isAfter(endTime.subtract(window, unit)) && date.isBefore(endTime);
+  console.log(
+    `Is ${date} in Window? ${endTime.subtract(
+      window,
+      unit
+    )} - ${endTime.toString()} == ${result}`
+  );
+  return result;
 }
 
 export async function hasValidLatestCheckin(
   habit: Habit
 ): Promise<CheckIn | null> {
+  console.log("Has Valid Latest Check In");
   const lastCheckIn = await checkInModel
     .findOne({ habit: habit._id })
     .sort({ timeOfCheckIn: -1 })
     .limit(1);
 
   const nextEndTime = getEndTime(habit, 1);
-  console.log(`${nextEndTime.toISOString()} ${lastCheckIn}`);
   if (!lastCheckIn) {
     return null;
   } else {

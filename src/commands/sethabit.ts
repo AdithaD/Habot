@@ -61,8 +61,6 @@ export default {
       return;
     }
 
-    console.log(name, datetime.toISOString(), window, repeat, audience);
-
     const habit = new habitModel({
       name,
       datetime: datetime.toDate(),
