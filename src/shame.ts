@@ -59,9 +59,7 @@ export async function nameAndShame(
 ) {
   const habit = await habitModel.findById(habitId);
 
-  console.log(`Checking Name and Shame command: ${dayjs().format("HH:mm:ss")}`);
   const hasCheckIn = (await hasValidLatestCheckIn(habit, 1)) != null;
-  console.log(`Should shame?? ${hasCheckIn == false}`);
 
   const guild = await client.guilds.fetch(habit.guild);
   const target = await guild.members.fetch(habit.target);
@@ -84,7 +82,9 @@ export async function nameAndShame(
         channel.send({
           content: `${member ? `<@${member.id}>,` : ""} ${
             role ? `<@${role.id}>` : ""
-          } ${`<@${target.id}>`} has been shamed for not ${habit.name}. ${
+          } ${`<@${target.id}>`} has been ${getShameWord()} for not ${
+            habit.name
+          }. ${
             previousStreak > 2 ? `Losing a streak of ${previousStreak}` : ""
           }`,
         });
@@ -93,4 +93,18 @@ export async function nameAndShame(
   }
 
   scheduleShame(habit, client);
+}
+
+const shameWords = [
+  "shamed",
+  "disgraced",
+  "humiliated",
+  "made a fool of",
+  "put to shame",
+  "dishonoured",
+  "denigrated",
+  "embarrased",
+];
+function getShameWord() {
+  return shameWords[Math.floor(Math.random() * shameWords.length)];
 }

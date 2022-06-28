@@ -23,7 +23,6 @@ export default {
         .setAutocomplete(true)
     ),
   async execute(interaction: CommandInteraction) {
-    console.log(`Running command: CHECK IN ${dayjs().format("HH:mm:ss")}`);
     const habitName = interaction.options.getString("habit");
 
     const habit = await habitModel.findOne({
@@ -58,7 +57,6 @@ export default {
               message ??
                 `Successfully checked in ${habit.streak} times in a row`
             );
-            console.log("\n Successfully Checked In");
           } catch (error) {
             console.log(error);
             await interaction.reply({ content: "Error while saving to DB" });
