@@ -44,7 +44,7 @@ export async function hasValidLatestCheckin(
     const timeOfCheckIn = dayjs(lastCheckIn.timeOfCheckIn);
     if (habit.repeat) {
       if (habit.window) {
-        return inWindow(timeOfCheckIn, habit.window, "hours", nextEndTime)
+        return inWindow(timeOfCheckIn, habit.window, "seconds", nextEndTime)
           ? lastCheckIn
           : null;
       } else {

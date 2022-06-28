@@ -4,6 +4,7 @@ import customParseFormat from "dayjs/plugin/customParseFormat";
 dayjs.extend(customParseFormat);
 import { CommandInteraction, GuildMember, Interaction, Role } from "discord.js";
 import { habitModel } from "../db/habit";
+import { scheduleShame } from "../shame";
 
 export default {
   data: new SlashCommandBuilder()
@@ -75,6 +76,8 @@ export default {
     try {
       await habit.validate();
       await habit.save();
+
+      scheduleShame(habit, interaction.client);
     } catch (error) {
       console.error(error);
       await interaction.reply({ content: "Error while saving to DB" });

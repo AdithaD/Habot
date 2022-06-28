@@ -89,7 +89,6 @@ export default {
       name: habit.name,
       value: habit.name,
     }));
-    console.log(results);
     await interaction.respond(results);
   },
 };
@@ -101,7 +100,7 @@ async function canCheckIn(
 
   const _hasValidLatestCheckin = await hasValidLatestCheckin(habit);
   if (habit.window) {
-    let isNowInWindow = inWindow(dayjs(), habit.window, "h", nextEndTime);
+    let isNowInWindow = inWindow(dayjs(), habit.window, "seconds", nextEndTime);
     let canCheckIn = !_hasValidLatestCheckin && isNowInWindow;
 
     if (!canCheckIn) {

@@ -47,7 +47,6 @@ export function scheduleShame(habit: Habit, client: Client<boolean>) {
 
 export async function nameAndShame(habit: Habit, client: Client<boolean>) {
   const checkIn = await hasValidLatestCheckin(habit);
-  console.log(checkIn);
   if (checkIn == null) {
     const guild = await client.guilds.fetch(habit.guild);
     const target = await guild.members.fetch(habit.target);
@@ -61,14 +60,12 @@ export async function nameAndShame(habit: Habit, client: Client<boolean>) {
         const role = guild.roles.cache.get(habit.audience);
 
         channel.send({
-          content: `${member ? `<@${member.id}>` : null} ${
+          content: `${member ? `<@${member.id}>,` : ""} ${
             role ? `<@${role.id}>` : ""
-          }, ${`<@${target.id}>`} has been shamed for not ${habit.name}`,
+          } ${`<@${target.id}>`} has been shamed for not ${habit.name}`,
         });
       }
     }
-  } else {
-    console.log(`${habit.name} no shame`);
   }
 
   scheduleShame(habit, client);
